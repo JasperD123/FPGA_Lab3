@@ -1,0 +1,91 @@
+module norefound_machine(
+input  sys_clk,// system clock: 50N 
+input  sys_rst_n, // Reset button 
+input  coin_one, // Input money:only ca
+input  coin_half, // Input money:only ca
+ output  cola // output cola: 0 means
+);
+// machine state decode 
+parameter  IDLE= 3'b001;
+parameter  HALF=3'b010; 
+parameter  ONE=3'b011; 
+parameter  ONE_HALF=3'b100;
+
+// machine variable 
+reg [2:0] st_next;
+reg [2:0] st_cur;
+always @(posedge sys_clk or negedge sys_rst_n) begin
+	if (!sys_rst_n)
+	begin
+	st_cur <= IDLE; end 
+	else
+	begin
+	st_cur <= st_next; end 
+	end
+always @(*) begin
+	case(st_cur)
+	IDLE:
+	if (coin_one == 1'b1)
+	st_next = ONE; 
+	else if (coin_half == 1'b1)
+	st_next = HALF; 
+	else
+	st_next= IDLE;
+	HALF:
+	if (coin_one==1'b1)
+	st_next= ONE_HALF; 
+	else if (coin_half == 1'b1)
+	st_next =ONE;
+	else st_next=HALF;
+	ONE:
+	if (coin_one==1'b1)
+	st_next= IDLE; 
+	else if (coin_half == 1'b1)
+	st_next =ONE_HALF;
+	else st_next=ONE;
+	ONE_HALF:
+	if (coin_one==1'b1)
+	st_next= IDLE; 
+	else if (coin_half == 1'b1)
+	st_next =IDLE;
+	else st_next=ONE_HALF;
+	
+	endcase 
+	end
+
+reg cola_r;
+always @(posedge sys_clk or negedge sys_rst_n) begin
+	if (!sys_rst_n)begin 
+	cola_r <= 1'b0;
+	
+	 end 
+	else begin 
+	case(st_cur)
+	IDLE: begin	
+		cola_r<=0;
+			end
+	HALF:begin
+			  cola_r<=0;
+    end
+	ONE:begin
+         if(coin_one==1'b1)
+			  cola_r<=1;
+			  else cola_r<=0;
+   end 
+   ONE_HALF:begin 
+			if(coin_one==1'b1)
+			  cola_r<=1;
+			 else if(coin_half==1'b1) cola_r<=1;
+			  else cola_r<=0;
+     end 	
+
+		default:begin 
+		
+	    cola_r<=0;
+		end 
+	endcase
+	end 
+	end 
+assign cola = cola_r;
+
+endmodule
